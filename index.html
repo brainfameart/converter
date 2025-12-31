@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CINEMA TRANSCODE // Universal Media Converter</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Set up Tailwind configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'midnight': '#0a0a0c',
+                        'neon-purple': '#a855f7',
+                        'neon-pink': '#ec4899',
+                        'code-gray': '#1f2937',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace'],
+                    },
+                    animation: {
+                        'glow': 'glow 1.5s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': { 'box-shadow': '0 0 5px #ec4899, 0 0 10px #a855f7' },
+                            '100%': { 'box-shadow': '0 0 10px #ec4899, 0 0 20px #a855f7' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Apply custom font globally and ensure full screen background */
+        body {
+            background-color: #0a0a0c;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        /* Hide default file input */
+        #fileInput {
+            display: none;
+        }
+
+        /* Style the conversion selectors to fit the theme */
+        .select-styled {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23ec4899'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd' /%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.5em 1.5em;
+            cursor: pointer;
+        }
+
+        /* Cinematic Gradient Text for Header */
+        .cinematic-text {
+            background-image: linear-gradient(90deg, #ec4899, #a855f7, #ec4899);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 900;
+        }
+
+        /* Custom progress bar styles */
+        #progressBar {
+            transition: width 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="selection:bg-neon-purple selection:text-white">
+
+    <!-- Main Converter Container -->
+    <div id="converter" class="w-full max-w-lg md:max-w-xl lg:max-w-2xl bg-code-gray/70 backdrop-blur-sm p-6 sm:p-10 rounded-xl shadow-2xl border border-neon-purple/30 transition-all duration-300">
+        
+        <!-- Header Section -->
+        <header class="text-center mb-10">
+            <h1 class="cinematic-text text-4xl sm:text-5xl lg:text-6xl tracking-tighter mb-2">
+                TRANSCODE / <span class="text-white">INITIATE</span>
+            </h1>
+            <p class="text-neon-pink/80 text-lg font-mono tracking-wider">
+                Seamless Cross-Format Processing.
+            </p>
+        </header>
+
+        <!-- Conversion Form -->
+        <div id="conversionForm" class="space-y-6">
+
+            <!-- Format Selection Row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                <!-- 1. Source Format Selection -->
+                <div>
+                    <label for="sourceSelect" class="block text-sm font-semibold text-neon-purple/90 mb-1">
+                        1. YOUR CURRENT FILE FORMAT
+                    </label>
+                    <div class="relative">
+                        <select id="sourceSelect" class="select-styled w-full p-4 pl-5 bg-midnight border border-neon-purple/50 rounded-lg text-lg text-white focus:ring-2 focus:ring-neon-pink transition-all duration-200">
+                            <option value="">-- Select Source Format (1/2) --</option>
+                            <option value="mp4">MP4 (Video)</option>
+                            <option value="webm">WebM (Video)</option>
+                            <option value="mov">MOV (QuickTime)</option>
+                            <option value="avi">AVI (Video)</option>
+                            <option value="mkv">MKV (Matroska)</option>
+                            <option value="flv">FLV (Flash Video)</option>
+                            <option value="wmv">WMV (Windows Media)</option>
+                            <option value="ts">TS (Transport Stream)</option>
+                            <option value="m4a">M4A (Audio)</option>
+                            <option value="wav">WAV (Audio)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 2. Target Format Selection -->
+                <div>
+                    <label for="targetSelect" class="block text-sm font-semibold text-neon-purple/90 mb-1">
+                        2. CONVERT TO NEW FORMAT
+                    </label>
+                    <div class="relative">
+                        <select id="targetSelect" class="select-styled w-full p-4 pl-5 bg-midnight border border-neon-purple/50 rounded-lg text-lg text-white focus:ring-2 focus:ring-neon-pink transition-all duration-200" disabled>
+                            <option value="">-- Select Target Format (2/2) --</option>
+                            <!-- Options populated dynamically by JavaScript -->
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File Input Area (Drag & Drop Styled) -->
+            <label id="dropArea" for="fileInput" class="block cursor-pointer p-10 mt-6 border-4 border-dashed border-neon-purple/40 bg-midnight/60 rounded-xl text-center hover:bg-midnight/80 transition-all duration-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto text-neon-pink" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 014 4v14H7a4 4 0 01-4-4v-7" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4-4m0 0l4 4m-4-4v10" />
+                </svg>
+                <p class="mt-4 text-white text-lg font-semibold">
+                    <span id="dropText">DROP FILE HERE</span>
+                </p>
+                <p class="text-gray-400 text-sm">
+                    Must match selected source format. Max 500MB (Simulated limit).
+                </p>
+            </label>
+            <input type="file" id="fileInput" accept=".*" />
+            
+            <!-- Conversion Button -->
+            <button id="convertButton" disabled class="w-full py-4 text-xl font-bold bg-gray-700/50 text-gray-500 rounded-lg transition-all duration-300 cursor-not-allowed">
+                INITIATE TRANSCODE
+            </button>
+
+            <!-- Status and Progress Area -->
+            <div id="statusArea" class="pt-4 hidden">
+                <p id="statusMessage" class="text-sm font-mono text-neon-pink mb-2">Awaiting file...</p>
+                <!-- Progress Bar -->
+                <div class="w-full h-3 bg-code-gray/50 rounded-full overflow-hidden border border-neon-purple/40">
+                    <div id="progressBar" class="h-full bg-neon-purple" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <!-- Download Button (Initially hidden) -->
+            <a id="downloadButton" href="#" download class="w-full py-4 text-xl font-bold rounded-lg text-center bg-neon-purple hover:bg-neon-pink transition-all duration-300 hidden cursor-pointer border-2 border-neon-pink">
+                DOWNLOAD OUTPUT
+            </a>
+
+            <!-- Error/Success Message Box -->
+            <div id="messageBox" class="hidden p-4 rounded-lg text-sm transition-all duration-300"></div>
+
+        </div>
+
+    </div>
+
+    <!-- Script Block -->
+    <script>
+        // DOM Elements
+        const fileInput = document.getElementById('fileInput');
+        const dropArea = document.getElementById('dropArea');
+        const dropText = document.getElementById('dropText');
+        const sourceSelect = document.getElementById('sourceSelect');
+        const targetSelect = document.getElementById('targetSelect');
+        const convertButton = document.getElementById('convertButton');
+        const statusArea = document.getElementById('statusArea');
+        const statusMessage = document.getElementById('statusMessage');
+        const progressBar = document.getElementById('progressBar');
+        const downloadButton = document.getElementById('downloadButton');
+        const messageBox = document.getElementById('messageBox');
+        const MAX_FILE_SIZE_MB = 500;
+
+        let selectedFile = null;
+        
+        // Comprehensive list of formats and their type (Video/Audio)
+        const ALL_FORMATS = [
+            { ext: 'mp4', type: 'Video' },
+            { ext: 'webm', type: 'Video' },
+            { ext: 'mov', type: 'Video' },
+            { ext: 'avi', type: 'Video' },
+            { ext: 'mkv', type: 'Video' },
+            { ext: 'flv', type: 'Video' },
+            { ext: 'wmv', type: 'Video' },
+            { ext: 'ts', type: 'Video' },
+            { ext: 'm4a', type: 'Audio' },
+            { ext: 'wav', type: 'Audio' },
+            { ext: 'mp3', type: 'Audio' },
+            { ext: 'gif', type: 'Image' },
+            { ext: 'ogg', type: 'Audio/Video' },
+            { ext: '3gp', type: 'Video' },
+            { ext: 'aac', type: 'Audio' },
+            { ext: 'flac', type: 'Audio' },
+            { ext: 'vob', type: 'Video' },
+        ];
+
+        /**
+         * Clears all dynamic UI elements and resets the button.
+         */
+        function resetUI() {
+            downloadButton.classList.add('hidden');
+            statusArea.classList.add('hidden');
+            progressBar.style.width = '0%';
+            convertButton.disabled = true;
+            convertButton.textContent = 'INITIATE TRANSCODE';
+            convertButton.classList.remove('bg-neon-purple', 'hover:bg-neon-pink', 'animate-glow');
+            convertButton.classList.add('bg-gray-700/50', 'text-gray-500', 'cursor-not-allowed');
+            messageBox.classList.add('hidden');
+            dropText.textContent = 'DROP FILE HERE';
+            dropArea.classList.remove('border-green-500', 'border-red-500');
+            // Do not reset selectedFile or selected conversions here, only when a new file is dropped/selected
+        }
+
+        /**
+         * Shows an error message in the message box.
+         * @param {string} message - The error message.
+         */
+        function showError(message) {
+            messageBox.textContent = `ERROR: ${message}`;
+            messageBox.className = 'p-4 rounded-lg text-sm bg-red-900/40 text-red-300 border border-red-500';
+            messageBox.classList.remove('hidden');
+            statusArea.classList.add('hidden');
+            convertButton.disabled = true;
+        }
+
+        /**
+         * Populates the target format dropdown based on the selected source format.
+         */
+        function updateTargetOptions() {
+            const sourceExt = sourceSelect.value;
+            
+            // Clear existing options
+            targetSelect.innerHTML = '<option value="">-- Select Target Format (2/2) --</option>';
+
+            if (!sourceExt) {
+                targetSelect.disabled = true;
+                return;
+            }
+
+            targetSelect.disabled = false;
+            
+            // Get the type of the source format (e.g., 'Video', 'Audio')
+            const sourceType = ALL_FORMATS.find(f => f.ext === sourceExt)?.type;
+
+            // Filter out the source format itself and formats that don't make sense (e.g., converting MP4 to raw text)
+            const availableTargets = ALL_FORMATS
+                .filter(f => f.ext !== sourceExt) // Cannot convert to itself
+                .sort((a, b) => a.ext.localeCompare(b.ext));
+
+            // Create options for the dropdown
+            availableTargets.forEach(format => {
+                const option = document.createElement('option');
+                option.value = format.ext;
+                option.textContent = `${format.ext.toUpperCase()} (${format.type})`;
+                targetSelect.appendChild(option);
+            });
+            
+            // If a file is loaded, re-validate
+            if (selectedFile) {
+                validateSelection(selectedFile, sourceExt, targetSelect.value);
+            }
+        }
+        
+        /**
+         * Updates the state of the Convert button based on all selections.
+         */
+        function updateConvertButtonState() {
+            const sourceExt = sourceSelect.value;
+            const targetExt = targetSelect.value;
+            
+            const isValidFile = selectedFile && selectedFile.name.toLowerCase().endsWith(`.${sourceExt}`);
+            const isValidConversion = sourceExt && targetExt;
+            
+            const isReady = isValidFile && isValidConversion;
+
+            if (isReady) {
+                convertButton.disabled = false;
+                convertButton.textContent = `CONVERT TO .${targetExt.toUpperCase()}`;
+                convertButton.classList.remove('bg-gray-700/50', 'text-gray-500', 'cursor-not-allowed');
+                convertButton.classList.add('bg-neon-purple', 'hover:bg-neon-pink', 'animate-glow');
+            } else {
+                convertButton.disabled = true;
+                convertButton.textContent = 'INITIATE TRANSCODE';
+                convertButton.classList.remove('bg-neon-purple', 'hover:bg-neon-pink', 'animate-glow');
+                convertButton.classList.add('bg-gray-700/50', 'text-gray-500', 'cursor-not-allowed');
+            }
+        }
+
+        /**
+         * Validates the selected file against the selected source format.
+         * @param {File} file - The file to validate.
+         * @param {string} sourceExt - The expected source extension (e.g., 'mp4').
+         * @param {string} targetExt - The target extension (e.g., 'mp3').
+         * @returns {boolean} - True if valid, false otherwise.
+         */
+        function validateSelection(file, sourceExt, targetExt) {
+            messageBox.classList.add('hidden');
+            dropArea.classList.remove('border-green-500', 'border-red-500');
+
+            if (!file) {
+                showError("No file selected.");
+                return false;
+            }
+            if (!sourceExt) {
+                showError("Please select the current file format (Step 1).");
+                return false;
+            }
+            if (!targetExt) {
+                showError("Please select the target conversion format (Step 2).");
+                return false;
+            }
+
+            const fileExt = file.name.split('.').pop().toLowerCase();
+
+            // Check file extension match (source format)
+            if (fileExt !== sourceExt) {
+                dropArea.classList.add('border-red-500');
+                showError(`File extension mismatch! Expected a .${sourceExt.toUpperCase()} file, but received .${fileExt.toUpperCase()}.`);
+                return false;
+            }
+            
+            // Check file size (simulated limit)
+            if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+                showError(`File is too large. Max file size is ${MAX_FILE_SIZE_MB}MB.`);
+                return false;
+            }
+
+            dropArea.classList.add('border-green-500');
+            return true;
+        }
+        
+        /**
+         * Handles file selection from input or drop.
+         * @param {FileList} files - The file list.
+         */
+        function handleFile(files) {
+            if (files.length === 0) return;
+            
+            const file = files[0];
+            const sourceExt = sourceSelect.value;
+            const targetExt = targetSelect.value;
+
+            // Reset UI for new file load
+            resetUI();
+            selectedFile = file;
+            dropText.textContent = `FILE LOADED: ${file.name}`;
+            
+            // Run validation check
+            validateSelection(file, sourceExt, targetExt);
+            updateConvertButtonState();
+        }
+
+        /**
+         * Simulates the conversion process with realistic progress updates.
+         * (Note: Real in-browser conversion is complex. This simulates the process flow.)
+         * @param {File} file - The input file object.
+         * @param {string} targetExt - The target extension (e.g., 'mp3').
+         * @returns {Promise<Blob>} - A promise that resolves with the converted Blob (content is original file).
+         */
+        function simulateConversion(file, targetExt) {
+            return new Promise((resolve) => {
+                let chunkIndex = 0;
+                const chunkSize = 1024 * 1024 * 5; // 5MB chunk
+                const totalChunks = Math.ceil(file.size / chunkSize);
+                
+                // Variable conversion time simulation (min 5s, based on file size)
+                const totalConversionTime = Math.max(5000, file.size / 1024 * 0.05); 
+                const intervalDuration = Math.round(totalConversionTime / totalChunks) || 500;
+
+                const mimeTypeMap = {
+                    'mp3': 'audio/mpeg', 'mp4': 'video/mp4', 'webm': 'video/webm',
+                    'gif': 'image/gif', 'avi': 'video/x-msvideo', 'mov': 'video/quicktime',
+                    'mkv': 'video/x-matroska', 'flv': 'video/x-flv', 'wmv': 'video/x-ms-wmv',
+                    'ts': 'video/mp2t', 'm4a': 'audio/mp4', 'wav': 'audio/wav',
+                    'ogg': 'application/ogg', '3gp': 'video/3gpp', 'aac': 'audio/aac',
+                    'flac': 'audio/flac', 'vob': 'video/dvd',
+                };
+                const outputMime = mimeTypeMap[targetExt] || 'application/octet-stream';
+
+                const interval = setInterval(() => {
+                    chunkIndex++;
+
+                    if (chunkIndex > totalChunks) {
+                        clearInterval(interval);
+                        
+                        // Finalizing UI update
+                        statusMessage.textContent = "Conversion Complete. Finalizing File...";
+                        progressBar.style.width = '100%';
+
+                        // Resolve with a new blob containing the original file's content 
+                        // but setting the target MIME type.
+                        setTimeout(() => {
+                            resolve(new Blob([file], { type: outputMime }));
+                        }, 1000); // 1 second finalization delay
+                        return;
+                    }
+
+                    // Update progress
+                    const progress = Math.min(100, Math.floor((chunkIndex / totalChunks) * 100));
+                    progressBar.style.width = `${progress}%`;
+                    statusMessage.textContent = `Transcoding... Processing chunk ${chunkIndex} of ${totalChunks} (${progress}%)`;
+                    
+                }, intervalDuration); 
+            });
+        }
+
+        // --- Event Listeners ---
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            handleFile(e.target.files);
+        });
+
+        // Source format change
+        sourceSelect.addEventListener('change', () => {
+            updateTargetOptions(); // Recalculate available targets
+            resetUI();
+            
+            // Re-validate against the new source selection
+            if (selectedFile) {
+                validateSelection(selectedFile, sourceSelect.value, targetSelect.value);
+            }
+            updateConvertButtonState();
+        });
+
+        // Target format change
+        targetSelect.addEventListener('change', () => {
+            resetUI();
+            
+            // Re-validate
+            if (selectedFile) {
+                validateSelection(selectedFile, sourceSelect.value, targetSelect.value);
+            }
+            updateConvertButtonState();
+        });
+
+
+        // Drag/Drop handling
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, () => {
+                dropArea.classList.add('border-neon-pink/80', 'scale-[1.01]');
+                dropText.classList.add('animate-pulse');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, () => {
+                dropArea.classList.remove('border-neon-pink/80', 'scale-[1.01]');
+                dropText.classList.remove('animate-pulse');
+            });
+        });
+
+        dropArea.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            handleFile(dt.files);
+        });
+
+        // Convert Button Click
+        convertButton.addEventListener('click', async () => {
+            if (convertButton.disabled) return;
+
+            const sourceExt = sourceSelect.value;
+            const targetExt = targetSelect.value;
+            
+            if (!validateSelection(selectedFile, sourceExt, targetExt)) return;
+
+            // Start UI state for conversion
+            statusArea.classList.remove('hidden');
+            convertButton.disabled = true;
+            convertButton.textContent = 'TRANSMITTING...';
+            convertButton.classList.remove('animate-glow');
+            downloadButton.classList.add('hidden');
+            progressBar.style.width = '0%';
+            
+            try {
+                // Simulate the conversion
+                const resultBlob = await simulateConversion(selectedFile, targetExt);
+                
+                // Construct the new filename
+                const originalName = selectedFile.name.substring(0, selectedFile.name.lastIndexOf('.')) || 'converted_file';
+                const newFilename = `${originalName}.${targetExt}`;
+                
+                // Create a URL for the Blob and set the download link
+                const url = URL.createObjectURL(resultBlob);
+                downloadButton.href = url;
+                downloadButton.download = newFilename;
+                downloadButton.textContent = `DOWNLOAD .${targetExt.toUpperCase()} OUTPUT`;
+                
+                // Update final UI state
+                statusMessage.textContent = `SUCCESS: Transcode to .${targetExt.toUpperCase()} complete.`;
+                messageBox.textContent = 'Conversion sequence complete. Review output file.';
+                messageBox.className = 'p-4 rounded-lg text-sm bg-green-900/40 text-green-300 border border-green-500';
+                messageBox.classList.remove('hidden');
+                
+                // Show download button
+                downloadButton.classList.remove('hidden');
+                convertButton.textContent = 'TRANSCODE COMPLETE';
+                convertButton.classList.remove('bg-neon-purple');
+                convertButton.classList.add('bg-green-700/50', 'text-green-300');
+
+
+            } catch (error) {
+                showError(`Conversion failed: ${error.message}`);
+                console.error('Conversion error:', error);
+                convertButton.textContent = 'RETRY';
+            } finally {
+                // Allow re-conversion (will re-enable via updateConvertButtonState call)
+                updateConvertButtonState(); 
+            }
+        });
+
+        // Initial setup
+        window.onload = () => {
+            updateTargetOptions(); // Initialize target options
+            resetUI();
+            console.log("Cinematic Converter Initialized with Dual Selection.");
+        };
+
+    </script>
+</body>
+</html>
+
+
